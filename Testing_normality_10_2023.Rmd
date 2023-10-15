@@ -20,7 +20,6 @@ library(dplyr)
 library(goft)
 
 library(devtools)
-install_github("callumgwtaylor/hdxr")
 
 rm(list = ls())
 
@@ -34,6 +33,7 @@ names(dataset)<-c("age","workclass","fnlwgt","education","education_number","mar
 
 str(dataset)
 ```
+## Age data: Descriptive Stats and plots
 
 Next let's look at two variables in this dataset: age and capital_gain, where age is self explanatory and capital_gain presents whether the household have any gains from investment sources other than wage/salary.
 
@@ -48,13 +48,6 @@ cat("standard deviation of age is", sd_age, "\n")
 kurtosis_age <-kurtosis(age_data)
 cat("kurtosis of age is", kurtosis_age, "\n")
 
-capital_data <-dataset$capital_gain
-mean_capital <-mean(capital_data)
-cat("mean capital gain is", mean_capital, "\n")
-sd_capital <-sd(capital_data)
-cat("standard deviation of capital gain is", sd_capital, "\n")
-kurtosis_capital <- kurtosis(capital_data)
-cat("kurtosis of capital gain is", kurtosis_capital, "\n")
 ```
 
 Let's further examine how the datasets look like by plotting plotting both datasets. After all, we want to see what we have. Considering that both variables are discrete variables, we can just scatterplot them by placing index (observation) on the x axis and the value on the y axis. 
@@ -62,12 +55,15 @@ Let's further examine how the datasets look like by plotting plotting both datas
 ```{r}
 plot(age_data, main = "Age data", xlab = "Observations", ylab = "age")
 ```
+
 This doesn't look very informative so let's analyze the data a bit. We could use a histogram, but since the data is "discrete" I'll just count the occurences of each age present in the dataset. 
 
 ```{r}
 age_counts <- table(age_data)
 plot(age_counts)
 ```
+## Age Data: Further confirmation of its normality
+
 Now we can fairly easily see that the dataset (population) behaves somehwat "normally", and this means that if we were to take standard reach samples with a 95% confidence level with a margin of error of 10%, we can fairly confidentally say that our sample indeed represents the reality=population. But before that I want to quickly confirm the population is indeed normally distributed, i.e. 68% of the values fall between one standard deviation from the mean. 
 
 ```{r}
@@ -75,10 +71,12 @@ lower_limit <- mean_age - sd_age
 upper_limit <- mean_age + sd_age
 between_sd_values <- age_data[age_data >= lower_limit & age_data <= upper_limit]
 percentage_between_sd_values <- length(between_sd_values)/length(age_data)
-cat("And as we see, ", percentage_between_sd_values, " falls within one standard deviation from the mean, meaning our dataset looks fairly normal indeed with a kurtosis of ", kurtosis_age, " meaning the dataseet doesn't have a fat tail as shouldn't be the case as anything above 3 for kurtosis shoudl make us worry.")
+cat("And as we see, ", percentage_between_sd_values, " falls within one standard deviation from the mean, meaning our dataset is indeed fairly normal. As a further confirmation its kurtosis, i.e. fatness of the tail, is ", kurtosis_age, " and since it's below 3 we should have anything to worry.")
 
 ```
+## Age data: What normality of the underlying data means for your sample
 
+Now, the assumption that the data at hand, I mean the actual real life population data (which you know very little about), is normal is ESSENTIAL to anything you do with your data. As we are now privileged to "know" our dataset, it's not only an assumption but rather knowledge and let's see what does this mean by taking a REACH sample of 100 observations randomly: 
 
 ```{r}
 for (i in 1:5){
@@ -88,11 +86,14 @@ for (i in 1:5){
   }
 
 ```
+##But what if you don't know and keep assuming normality
+
 Now, as we've worked a bit on what does it mean that a variable is normally distributed, let's look at another variable, namely capital_gain which tells us annual gains from financial instruments outside of standard wages etc. 
 
-Let's further assume that we don't know anything about the underlying "population" but rather just take a sample and go for it. Let's take a sample of 106 observations from this and get our factsheet ready. 
+Let's further assume that we don't know anything about the underlying "population" but rather just take a sample and go for it. Let's take a sample of 100 observations from this and get our factsheet ready. 
 
 ```{r}
+capital_data <-dataset$capital_gain
 REACH_sample2<-sample(capital_data, size = 100, replace = FALSE)
   mean_REACH_sample2 <- mean(REACH_sample2)
   cat("Mean capital gain is ", mean_REACH_sample2, " and we are good to go.")
@@ -118,11 +119,15 @@ for (i in 1:5){
   plot(sample(capital_data, size = 100, replace = FALSE))
 }
 ```
-It's starting to look there's nothing very normal at all with our samples which begs the question whether we can use our normal tools at all. In this case, it's certain that we should not rely on our standard sample size calculation which is based on the (now wrong) assumption that the underlying data is normally distributed. 
+It's starting to look there's nothing very normal at all with our samples which begs the question whether the underlying data is normally distributed and whether we can use our normal tools at all. In this case, it's certain that we should not rely on our standard sample size calculation which is based on the (now wrong) assumption that the underlying data is normally distributed. 
+
+
+##Capital Gain Data: What is going on
 
 Let's go back into the population data and look what's actually goin on at the actual population data by examining the capital gains.Let's first look at the standard statistics of the capital population and then calculate how much data lies within one standard deviation from the true mean. 
 
 ```{r}
+#Descriptive stats
 capital_data <-dataset$capital_gain
 mean_capital <-mean(capital_data)
 cat("mean capital gain is", mean_capital, "\n")
@@ -131,6 +136,7 @@ cat("standard deviation of capital gain is", sd_capital, "\n")
 kurtosis_capital <- kurtosis(capital_data)
 cat("kurtosis of capital gain is", kurtosis_capital, "\n")
 
+#Calculating how much data is within one SD from the mean
 lower_limit <- mean_capital - sd_capital
 upper_limit <- mean_capital + sd_capital
 between_sd_values <- capital_data[capital_data >= lower_limit & age_data <= upper_limit]
@@ -139,17 +145,20 @@ cat("And as we see, ", percentage_between_sd_values, " % of the values fall with
 
 
 ```
-I'll make a histogram of the data to further illustrate the underlying realities. 
+I'll further order the dataset from smallest to the highest and plot those in a diagram. 
 
 ```{r}
 ordered_capital_data_asc <- capital_data[order(capital_data, decreasing = FALSE)]
 plot(ordered_capital_data_asc, xlab="ordered observations", ylab="gain in USD")
 ```
+
+From the ordered dataset, you can see that the dataset is not nicely grouped around the mean. It's called power law distribution (Pareto etc.) and 
+
+## Conclusion
+
 The main point here is that unless the underlying population data is normally distributed, nothing what you expect to work does not work. There are indeed some sophisticted models what can be used to tackle such phenomena but those are out of our reach and thus we should be careful. Lending from Nassim Taleb, these phenomenas follow 'fractal' or power law properties and should be thus handled differently. 
 
-The main point is that there is no easy way to tackle such data and by removing 'outliers' you are just fooling yourself a bit more and in the worst case scenario, delivering misleading data. In other words, your sample does not tell anything about the underlying characteristics of the population. 
-
-And since we are speaking and I'm inspired, let's see how well the capital_gain dataset represents the famous Pareto distribution
+To be continued....
 
 
 
