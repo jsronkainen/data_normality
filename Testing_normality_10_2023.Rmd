@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 The adult dataset is from the 1994 Census database. It is also known as “Census Income” dataset. Details of this dataset can be found at UCI Machine Learning Repository. We will use this dataset to explore normality of certain kind of data.
 
 ```{r}
-
+install.packages("moments")
 library(moments) # loading the package 
 library(dplyr)
 library(goft)
